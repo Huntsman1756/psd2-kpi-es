@@ -24,7 +24,10 @@
   documents remain the publishers' content; raw artifacts are kept locally
   for reproducibility but redistribution terms are unclear, so releases ship
   normalized data + metadata + acquisition scripts rather than the PDFs/XLSX
-  themselves (see ADR-004 decision in docs/limitations is noted here).
+  themselves (ADR-004). Consequence: *historical* offline reproducibility is
+  not guaranteed — if a publisher deletes or replaces a document, a clean
+  clone can verify hashes but not re-download the original bytes. See the
+  README's reproducibility section for the exact claims made.
 - **Santander unit ambiguity.** `APIs_TMR` header says seconds, values are
   milliseconds — interpreted and documented, could be wrong if the publisher
   meant something else.

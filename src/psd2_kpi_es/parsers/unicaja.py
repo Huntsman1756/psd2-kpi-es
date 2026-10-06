@@ -25,6 +25,7 @@ from __future__ import annotations
 import io
 import re
 from datetime import date
+from typing import Literal
 
 import pdfplumber
 
@@ -119,6 +120,7 @@ def _obs(
     raw_unit: str | None,
     locator: str,
     metric_definition: str | None = None,
+    interpretation: Literal["verbatim", "inferred"] = "verbatim",
 ) -> Observation:
     return Observation(
         entity_id=entity.entity_id,
@@ -210,12 +212,19 @@ def _recover(tok: str) -> str:
     return t
 
 
-def _pct(tok: str) -> float:
-    return parse_es_percent(_recover(tok) + "%")
+_CLEAN_TOK_RE = re.compile(r"^\d+([.,]\d+)?\s*(ms|m|s|%)?$")
 
 
-def _ms(tok: str) -> float:
-    return parse_es_percent(_recover(tok) + "%")
+def _pct(tok: str) -> tuple[float, bool]:
+    """Returns (value, inferred). Inferred when _recover had to do
+    non-trivial cleanup (mid-token glyphs, duplicated digits)."""
+    inferred = not _CLEAN_TOK_RE.match(tok.strip())
+    return parse_es_percent(_recover(tok) + "%"), inferred
+
+
+def _ms(tok: str) -> tuple[float, bool]:
+    inferred = not _CLEAN_TOK_RE.match(tok.strip())
+    return parse_es_percent(_recover(tok) + "%"), inferred
 
 
 def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResult:
@@ -283,7 +292,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                         if not tok or tok == "-":
                             continue
                         try:
-                            val = _pct(tok)
+                            val, inferred = _pct(tok)
                         except ValueError:
                             warnings.append(ParseWarning(code="CELL", message=f"{day} {tok!r}"))
                             continue
@@ -302,6 +311,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                                 raw_value=tok,
                                 raw_unit="%",
                                 locator=locator,
+                                interpretation="inferred" if inferred else "verbatim",
                             )
                         )
             else:  # rendimiento
@@ -313,7 +323,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                         if not tok or tok == "-":
                             continue
                         try:
-                            val = _ms(tok)
+                            val, inferred = _ms(tok)
                         except ValueError:
                             warnings.append(ParseWarning(code="CELL", message=f"{day} {tok!r}"))
                             continue
@@ -332,6 +342,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                                 raw_value=tok,
                                 raw_unit="ms",
                                 locator=locator,
+                                interpretation="inferred" if inferred else "verbatim",
                                 metric_definition=kpi_def,
                             )
                         )
@@ -342,7 +353,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                     if not tok or tok == "-":
                         continue
                     try:
-                        val = _pct(tok)
+                        val, inferred = _pct(tok)
                     except ValueError:
                         warnings.append(ParseWarning(code="CELL", message=f"{day} {tok!r}"))
                         continue
@@ -361,6 +372,7 @@ def parse(artifact: SourceArtifact, content: bytes, entity: Entity) -> ParseResu
                             raw_value=tok,
                             raw_unit="%",
                             locator=locator,
+                            interpretation="inferred" if inferred else "verbatim",
                         )
                     )
 
@@ -423,7 +435,7 @@ def _parse_monthly(artifact: SourceArtifact, pages, entity: Entity):
                 if tok.strip() in ("-", "NP"):
                     continue
                 try:
-                    val = _pct(tok) if unit is Unit.PERCENT else _ms(tok)
+                    val, inferred = _pct(tok) if unit is Unit.PERCENT else _ms(tok)
                 except ValueError:
                     warnings.append(ParseWarning(code="CELL", message=f"{cur_start} {tok!r}"))
                     continue
@@ -452,6 +464,7 @@ def _parse_monthly(artifact: SourceArtifact, pages, entity: Entity):
                     raw_label=label,
                     raw_value=tok,
                     raw_unit="%" if unit is Unit.PERCENT else "ms",
+                    interpretation="inferred" if inferred else "verbatim",
                 )
                 out.append(o)
     return out, warnings

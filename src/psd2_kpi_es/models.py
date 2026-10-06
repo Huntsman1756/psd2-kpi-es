@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -173,6 +174,11 @@ class Observation(BaseModel):
     raw_label: str | None = None
     raw_value: str | None = None
     raw_unit: str | None = None
+
+    # "verbatim": the normalized value is the published cell parsed as
+    # documented. "inferred": the value required a documented interpretation
+    # (e.g. unit inconsistent with magnitudes, corrupted glyph recovery).
+    interpretation: Literal["verbatim", "inferred"] = "verbatim"
 
     notes: str | None = None
 

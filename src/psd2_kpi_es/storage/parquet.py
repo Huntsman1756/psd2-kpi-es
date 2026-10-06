@@ -44,6 +44,7 @@ OBS_SCHEMA = pa.schema(
         ("raw_label", pa.string()),
         ("raw_value", pa.string()),
         ("raw_unit", pa.string()),
+        ("interpretation", pa.string()),
         ("notes", pa.string()),
     ]
 )
@@ -112,6 +113,7 @@ def observations_table(obs: list[Observation]) -> pa.Table:
             "raw_label": o.raw_label,
             "raw_value": o.raw_value,
             "raw_unit": o.raw_unit,
+            "interpretation": o.interpretation,
             "notes": o.notes,
         }
         for o in obs

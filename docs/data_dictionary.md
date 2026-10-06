@@ -27,6 +27,7 @@
 | source_sha256 | string | no | sha256 of the artifact bytes | — |
 | parser_name / parser_version | string | no | e.g. `unicaja` / `unicaja:2` | — |
 | raw_label / raw_value / raw_unit | string | yes | untransformed cell context | `Tiempo medio diario PIS` / `2547 ms` / `ms` |
+| interpretation | string | no | `verbatim` = cell parsed as documented; `inferred` = a documented interpretation was needed (unit inconsistent with magnitudes, corrupted-glyph recovery) | `inferred` |
 | notes | string | yes | caveats (unit interpretation, segments, SLA targets) | — |
 
 ## sources.parquet

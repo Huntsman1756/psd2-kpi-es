@@ -55,8 +55,14 @@ For each parser, several rows were checked end-to-end
 
 ## Known transformations requiring judgment
 
+Any value that required an interpretation rather than a literal parse is
+marked `interpretation='inferred'` on the observation itself:
+
 - Santander `APIs_TMR`: column header reads `Rendimiento (s)` but values are
-  millisecond-scale; stored as ms with a note (raw unit preserved as `s`).
-- CaixaBank/Santander XLSX ratio cells (0.9995) stored as percent (×100),
-  `raw_value` preserves the native cell.
+  millisecond-scale; stored as ms, `raw_unit='s'`, `interpretation='inferred'`.
+- Unicaja tokens damaged by PDF glyph overlaps (`ms13831383ms`): recovered
+  deterministically when possible (deduplicated halves, stray unit glyphs),
+  marked `interpretation='inferred'`; unrecoverable ones become warnings.
+- CaixaBank/Santander XLSX ratio cells (0.9995) stored as percent (×100) —
+  a definitional unit conversion, not an inference → `verbatim`.
 - Renta4 `NP` cells (counts not published on the PSU interface) → absence.

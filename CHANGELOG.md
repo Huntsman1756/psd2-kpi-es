@@ -11,5 +11,10 @@ Initial release.
 - Canonical Parquet dataset + derived DuckDB + Typer CLI
   (banks/coverage/latest/show/history/compare/rank/gaps/sources/explain).
 - Comparability model with hard guard in `rank --comparable-only`.
+- `interpretation` column: `verbatim` vs `inferred` for values that required
+  a documented interpretation (Santander's ms-labelled-as-seconds column,
+  Unicaja glyph-recovered cells).
+- Published anomalies preserved verbatim and flagged (Renta 4 TDA=-4,17 %
+  has a permanent regression fixture + test).
 - Golden tests over real fixtures; validation rules; CI + monthly refresh
   workflow (artifacts, no auto-commit).

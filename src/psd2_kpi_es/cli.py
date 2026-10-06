@@ -260,6 +260,7 @@ def explain(observation_id: str, as_json: bool = typer.Option(False, "--json")) 
         "raw_label",
         "raw_value",
         "raw_unit",
+        "interpretation",
         "comparability",
         "comparability_group",
         "source_url",

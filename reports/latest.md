@@ -8,7 +8,7 @@ Generated 2026-10-06 from `data/normalized/`.
 |---|---|---|---|---|---|---|
 | caixabank | 639 | 7 | 2024-04-01 | 2026-06-30 | 3 | 7694 |
 | renta4 | 2192 | 24 | 2019-09-14 | 2025-09-30 | 5 | 34082 |
-| santander | 91 | 0 | 2026-04-01 | 2026-06-30 | 2 | 2049 |
+| santander | 91 | 0 | 2026-04-01 | 2026-06-30 | 2 | 2413 |
 | unicaja | 2373 | 0 | 2019-09-14 | 2026-06-30 | 4 | 25983 |
 
 ## Latest published quarter — API availability (dedicated interface)

@@ -14,6 +14,12 @@ metrics into a single auditable dataset.
 Every normalized value traces back to the exact document, page, cell text,
 content hash and parser version that produced it.
 
+```text
+4 ASPSPs · 65 source artifacts · ~70k normalized observations
+row-level provenance · daily + monthly + quarterly reporting
+source anomalies preserved verbatim, never silently corrected
+```
+
 ```bash
 $ psd2-kpi-es compare --period 2025Q3 --metric availability
 entity_id  value    unit     aggregation          comparability_group     n_days
@@ -49,6 +55,18 @@ $ psd2-kpi-es explain obs_330019215be151f3
 | Santander | PDF→XLSX      | current quarter      | daily       |
 
 \* first publication starts 2019-09-14 (PSD2 go-live).
+
+## Why ~70k rows from only 4 entities?
+
+Volume comes from granularity, not entity count — the dataset stores **one
+row per cell** of every published table:
+
+| entity    | daily rows | other rows | total  | what drives the volume |
+|-----------|-----------:|-----------:|-------:|------------------------|
+| renta4    |     33,362 |        720 | 34,082 | ~2,192 days × 2 interfaces × 2 services (PIS/AIS) × ~4 KPIs |
+| unicaja   |     25,939 |         44 | 25,983 | ~2,373 days × 2 interfaces × ~6 KPI columns |
+| caixabank |      7,610 |         84 |  7,694 | 639 days × 2 interfaces × 6 columns |
+| santander |      2,413 |          — |  2,413 | 4 PSU channels × 2 KPIs + ~18 per-operation API times |
 
 ## Quickstart
 
@@ -124,6 +142,29 @@ mutable sources, published anomalies kept verbatim. No compliance claims —
 entity → period → document → page/cell → raw value
        → transformation → parser@version → sha256 → normalized row
 ```
+
+Every row carries `raw_label`/`raw_value`/`raw_unit` (the cell as published)
+plus an `interpretation` flag: `verbatim` when the cell parsed as documented,
+`inferred` when a documented interpretation was required — e.g. Santander's
+`Rendimiento (s)` column whose values are milliseconds despite the header,
+or Unicaja tokens damaged by PDF glyph overlaps. `explain` shows all of it.
+
+## Reproducibility — what is and isn't guaranteed
+
+Three different claims, kept honest:
+
+- **Verifiability**: for any observation, `explain` gives URL + SHA-256 +
+  parser version; re-fetch the same URL and compare hashes, or take any raw
+  artifact and re-run `build` — identical input bytes → identical dataset.
+- **Reproducibility from live sources**: the acquisition code re-downloads
+  every document from the publisher's URLs. This works today for all four
+  entities.
+- **Historical reproducibility is NOT guaranteed.** Publishers mutate or
+  drop documents (Santander overwrites one stable URN each quarter;
+  CaixaBank's older PDFs already 404). `data/raw/` blobs are kept locally
+  but not redistributed (ADR-004), so a clean clone cannot rebuild
+  yesterday's dataset if the source vanished — only artifacts you fetched
+  are recoverable. This is a property of the sources, not of the pipeline.
 
 ## Roadmap
 

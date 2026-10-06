@@ -26,6 +26,7 @@ from __future__ import annotations
 import io
 import re
 from datetime import date, datetime
+from typing import Literal
 
 import openpyxl
 from pypdf import PdfReader
@@ -147,6 +148,7 @@ def _obs(
     raw_unit,
     locator,
     notes=None,
+    interpretation: Literal["verbatim", "inferred"] = "verbatim",
 ) -> Observation:
     return Observation(
         entity_id=entity.entity_id,
@@ -173,6 +175,7 @@ def _obs(
         raw_label=raw_label,
         raw_value=raw_value,
         raw_unit=raw_unit,
+        interpretation=interpretation,
         notes=notes,
     )
 
@@ -182,6 +185,7 @@ def _service_of(tipo: str) -> Service:
     return {
         "AIS": Service.AIS,
         "PIS": Service.PIS,
+        "PISP": Service.PIS,
         "CBPII": Service.PIISP,
         "PIISP": Service.PIISP,
         "FCS": Service.PIISP,
@@ -212,7 +216,9 @@ def _parse_xlsx(artifact, content, entity) -> ParseResult:
         unit = Unit.PERCENT if kind == "DISP" else Unit.SECONDS
         group = "availability_daily_pct" if kind == "DISP" else "response_time_daily_mean_seconds"
         scale = 100.0 if kind == "DISP" else 1.0
-        raw_label = "Disponibilidad" if kind == "DISP" else "Rendimiento (s)"
+        raw_label = (
+            f"{channel} — Disponibilidad" if kind == "DISP" else f"{channel} — Rendimiento (s)"
+        )
         seg_note = f"PSU interface segment: {segment}" if segment else None
 
         for row in ws.iter_rows(min_row=2, values_only=True):
@@ -258,6 +264,8 @@ def _parse_apis_tmr(ws, artifact, entity, iface, warnings):
             continue
         day = _day(row[0])
         tipo, api_op, val = row[1], row[2], row[3] if len(row) > 3 else None
+        if api_op is not None and str(api_op).strip() in ("-", "0"):
+            continue  # section separator row, not an operation
         if day is None or val is None or str(val).strip() == "-":
             continue  # '-' = no requests that day (legit not-reported)
         try:
@@ -284,6 +292,7 @@ def _parse_apis_tmr(ws, artifact, entity, iface, warnings):
                 raw_unit="s",
                 locator="sheet 'APIs_TMR'",
                 notes=_TMR_NOTE,
+                interpretation="inferred",
             )
         )
     return out
