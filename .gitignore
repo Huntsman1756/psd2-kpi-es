@@ -1,0 +1,19 @@
+# python / uv
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# raw artifacts are NOT redistributed (see docs/adr/004)
+data/raw/
+.g0/
+
+# local scratch
+/tmp/
+*.tmp
+
+# build artifacts
+data/normalized/
+dist/

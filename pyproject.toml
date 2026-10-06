@@ -1,0 +1,54 @@
+[project]
+name = "psd2-kpi-es"
+version = "0.1.0"
+description = "Open, provenance-first dataset of PSD2 dedicated-interface availability and performance statistics published by Spanish ASPSPs."
+authors = [
+    { name = "psd2-kpi-es contributors" }
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+    "httpx>=0.28",
+    "pdfplumber>=0.11",
+    "selectolax>=0.3",
+    "pydantic>=2.10",
+    "pyarrow>=18",
+    "duckdb>=1.1",
+    "openpyxl>=3.1",
+    "pytz>=2026.5",
+    "pypdf>=6.19.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6",
+    "ruff>=0.9",
+    "mypy>=1.14",
+]
+
+[project.scripts]
+psd2-kpi-es = "psd2_kpi_es.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.11.25,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+packages = ["psd2_kpi_es"]

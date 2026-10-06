@@ -1,0 +1,51 @@
+# Catalog of entities and their publication endpoints.
+# Parsers are code; this file only declares *where* each entity publishes and
+# which parser interprets its artifacts.
+
+[entities.renta4]
+legal_name = "Renta 4 Banco, S.A."
+brand_name = "Renta 4"
+country = "ES"
+website = "https://www.r4.com"
+
+  [[entities.renta4.sources]]
+  kind = "index"
+  url = "https://www.r4.com/normativa/normativa-psd2"
+  parser = "renta4"
+  notes = "Index page listing quarterly PDFs 'Estadísticas Interfaz APIs NTYYYY'."
+
+[entities.unicaja]
+legal_name = "Unicaja Banco, S.A."
+brand_name = "Unicaja"
+country = "ES"
+website = "https://www.unicajabanco.es"
+
+  [[entities.unicaja.sources]]
+  kind = "index"
+  url = "https://www.unicajabanco.es/es/legales/tablon-de-anuncios"
+  parser = "unicaja"
+  notes = "Legal notice board listing 'Información estadística' quarterly PDFs since 2019."
+
+[entities.caixabank]
+legal_name = "CaixaBank, S.A."
+brand_name = "CaixaBank"
+country = "ES"
+website = "https://www.caixabank.es"
+
+  [[entities.caixabank.sources]]
+  kind = "index"
+  url = "https://www.caixabank.es/empresa/bancadistancia/api-store.html"
+  parser = "caixabank"
+  notes = "API Store page linking 'Descargar estadísticas de uso' PDFs hosted on imagin.com."
+
+[entities.santander]
+legal_name = "Banco Santander, S.A."
+brand_name = "Santander"
+country = "ES"
+website = "https://www.bancosantander.es"
+
+  [[entities.santander.sources]]
+  kind = "index"
+  url = "https://www.bancosantander.es/espacio-psd2"
+  parser = "santander"
+  notes = "PSD2 space linking quarterly summary PDF which itself links a daily XLSX."
