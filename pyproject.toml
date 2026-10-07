@@ -1,6 +1,6 @@
 [project]
 name = "psd2-kpi-es"
-version = "0.1.0"
+version = "0.1.1"
 description = "Open, provenance-first dataset of PSD2 dedicated-interface availability and performance statistics published by Spanish ASPSPs."
 authors = [
     { name = "psd2-kpi-es contributors" }

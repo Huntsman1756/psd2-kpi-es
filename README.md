@@ -122,6 +122,7 @@ gaps                quarters with no data found in configured sources
 sources <entity>    artifacts, URLs and SHA-256
 explain <obs_id>    full provenance chain of one observation
 report              writes reports/latest.md
+site                builds the static website into site/dist/
 ```
 
 ## Schema
@@ -176,11 +177,17 @@ Three different claims, kept honest:
   yesterday's dataset if the source vanished — only artifacts you fetched
   are recoverable. This is a property of the sources, not of the pipeline.
 
+## Web site
+
+`uv run psd2-kpi-es site` renders the dataset to a fully static site under
+`site/dist/` (HTML + JSON + SVG charts, no server runtime, no JS deps).
+Deploy = rsync to any web server; reference nginx setup and the required
+GitHub secrets are in [docs/deploy.md](docs/deploy.md).
+
 ## Roadmap
 
 - more entities (Sabadell, Ibercaja telemetry portal, Bankinter, …)
 - quarter-over-quarter mutation diffs
-- static report site (v0.2+, see docs/future_frontend.md)
 
 ## License
 

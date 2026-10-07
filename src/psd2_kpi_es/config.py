@@ -16,9 +16,11 @@ OBSERVATIONS_PARQUET = NORMALIZED_DIR / "observations.parquet"
 SOURCES_PARQUET = NORMALIZED_DIR / "sources.parquet"
 DUCKDB_PATH = DIST_DIR / "psd2-kpi-es.duckdb"
 
+SITE_DIR = REPO_ROOT / "site"
+
 CATALOG_PATH = Path(__file__).parent / "catalog.toml"
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 USER_AGENT = f"psd2-kpi-es/{APP_VERSION} (+https://github.com/Huntsman1756/psd2-kpi-es)"
 REQUEST_TIMEOUT_S = 30.0
 MAX_ARTIFACT_BYTES = 50 * 1024 * 1024  # 50 MiB safety cap

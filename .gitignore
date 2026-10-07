@@ -17,3 +17,6 @@ data/raw/
 # build artifacts
 data/normalized/
 dist/
+
+# generated static site
+site/dist/

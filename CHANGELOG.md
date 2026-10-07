@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.1] — 2026-10-07
+
+Hardening + static web presence. No dataset schema changes.
+
+- CI: `mypy` is now a real gate (was `|| true` informational).
+- `ingest` maps typed domain errors to exit code 5 with a machine-readable
+  `{"error_code": ...}` on stderr; `scripts/ingest_all.sh` tracks per-entity
+  outcomes — `SOURCE_NOT_FOUND` is reported as a modelled absence while real
+  failures (network/parse/validation/zero observations) fail the refresh.
+- New `site` command: renders the dataset to a fully static site under
+  `site/dist/` (HTML + JSON, no server runtime) — overview, entities,
+  compare, history and provenance pages.
+- `parse_period_label` accepts explicit range labels (`YYYY-MM-DD_YYYY-MM-DD`)
+  — fixes `compare` on labels like `2019-09-14_2019-12-16`.
+- `deploy-site.yml` workflow: monthly build + rsync deploy to a VPS
+  (nginx), see docs/deploy.md.
+
 ## [0.1.0] — 2026-10-06
 
 Initial release.

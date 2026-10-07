@@ -1,0 +1,57 @@
+name: deploy-site
+
+# Rebuilds the static site from live sources and rsyncs it to the VPS.
+# Data freshness comes from the refresh workflow (monthly, day 5); this
+# runs after it and on demand. Requires secrets/vars documented in
+# docs/deploy.md; without them the deploy step fails fast on purpose.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 6 * *"   # monthly, day 6, 07:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Fetch + parse all entities
+        run: bash scripts/ingest_all.sh
+
+      - name: Build static site
+        run: uv run psd2-kpi-es site
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/dist/
+          retention-days: 30
+
+      - name: Configure SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_DEPLOY_KEY }}
+
+      - name: Deploy site/dist to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_DEPLOY_USER }}
+          WEB_ROOT: ${{ vars.VPS_WEB_ROOT }}
+          SSH_PORT: ${{ vars.VPS_SSH_PORT || '22' }}
+        run: |
+          test -n "$VPS_HOST" && test -n "$VPS_USER" && test -n "$WEB_ROOT"
+          rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
+            site/dist/ "$VPS_USER@$VPS_HOST:$WEB_ROOT/"
