@@ -30,6 +30,16 @@ unicaja    100.0    percent  avg_of_daily         availability_daily_pct  92
 ```
 
 ```bash
+$ psd2-kpi-es gaps
+entity_id  missing_period
+---------  --------------
+caixabank  2024Q3
+renta4     2025Q4
+renta4     2026Q1
+…
+```
+
+```bash
 $ psd2-kpi-es explain obs_330019215be151f3
          entity_name: Unicaja Banco, S.A.
         period_label: 2025-07-17
