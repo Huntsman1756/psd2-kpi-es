@@ -62,10 +62,24 @@ def _table(headers: list[str], rows: list[list[str]], cls: str = "") -> str:
     return f"<table{c}><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table>"
 
 
-def _render_page(page: str, title: str, content: str, generated: str) -> str:
+def _dataset_html(ref: str | None) -> str:
+    if ref:
+        return f'dataset <a href="{REPO_URL}/releases/tag/{_esc(ref)}">{_esc(ref)}</a>'
+    return "dataset <em>local build</em>"
+
+
+def _render_page(
+    page: str, title: str, content: str, generated: str, dataset: str
+) -> str:
     tpl = string.Template(TEMPLATE.read_text(encoding="utf-8"))
     return tpl.substitute(
-        page=page, title=title, content=content, generated=generated, repo=REPO_URL
+        page=page,
+        title=title,
+        content=content,
+        generated=generated,
+        repo=REPO_URL,
+        dataset=dataset,
+        app_version=config.APP_VERSION,
     )
 
 
@@ -104,6 +118,9 @@ def _collect() -> dict[str, Any]:
             "artifacts": queries.cols("SELECT count(*) AS n FROM sources")[0]["n"],
             "earliest": str(min(r["earliest"] for r in cov)),
             "latest": str(max(r["latest"] for r in cov)),
+            "fetched": str(
+                queries.cols("SELECT max(retrieved_at) AS m FROM sources")[0]["m"]
+            )[:10],
         },
         "metrics": sorted({c["metric"] for c in combos}),
         "services": sorted({c["service"] for c in combos}),
@@ -443,7 +460,7 @@ def _write_json(out: Path, name: str, payload: Any) -> None:
     )
 
 
-def build(out_dir: Path | None = None) -> Path:
+def build(out_dir: Path | None = None, dataset_ref: str | None = None) -> Path:
     out = Path(out_dir) if out_dir else DEFAULT_OUT
     if out.exists():
         shutil.rmtree(out)
@@ -459,6 +476,8 @@ def build(out_dir: Path | None = None) -> Path:
         "meta.json",
         {
             "generated": generated,
+            "dataset_ref": dataset_ref,
+            "app_version": config.APP_VERSION,
             "totals": data["totals"],
             "quarters": data["periods"]["quarter"],
             "months": data["periods"]["month"],
@@ -471,12 +490,17 @@ def build(out_dir: Path | None = None) -> Path:
     _write_json(out, "compare.json", _compare_rows(periods, data["combos"]))
 
     cov_by_entity = {r["entity_id"]: r for r in data["coverage"]}
+    dataset = _dataset_html(dataset_ref)
     pages = {
-        "index.html": _render_page("index", "Overview", _index_page(data), generated),
-        "entities.html": _render_page("entities", "Entities", _entities_page(data), generated),
-        "compare.html": _render_page("compare", "Compare", _compare_page(), generated),
-        "history.html": _render_page("history", "History", _history_page(), generated),
-        "provenance.html": _render_page("provenance", "Provenance", _provenance_page(), generated),
+        "index.html": _render_page("index", "Overview", _index_page(data), generated, dataset),
+        "entities.html": _render_page(
+            "entities", "Entities", _entities_page(data), generated, dataset
+        ),
+        "compare.html": _render_page("compare", "Compare", _compare_page(), generated, dataset),
+        "history.html": _render_page("history", "History", _history_page(), generated, dataset),
+        "provenance.html": _render_page(
+            "provenance", "Provenance", _provenance_page(), generated, dataset
+        ),
     }
     for e in data["entities"]:
         _write_json(out, f"history-{e['id']}.json", _history_file(e["id"]))
@@ -485,6 +509,7 @@ def build(out_dir: Path | None = None) -> Path:
             e["brand"],
             _entity_page(e, cov_by_entity[e["id"]], generated),
             generated,
+            dataset,
         )
     for name, content in pages.items():
         (out / name).write_text(content, encoding="utf-8")

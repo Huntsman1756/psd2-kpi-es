@@ -10,6 +10,11 @@
 - VPS deploy hardened: SSH host key pinned via `VPS_HOST_KEY` secret
   (`StrictHostKeyChecking=yes`, no trust-on-first-use); docs specify a
   dedicated unprivileged `psd2-deploy` user.
+- Site footer shows the dataset release it was built from (`--dataset-ref`
+  / `PSD2_DATASET_REF`), build time and app version — a deployed page is
+  traceable to a reviewed dataset.
+- Post-deploy smoke test in `deploy-site.yml`: the run is green only when
+  the public URL serves the generated files (not just when rsync exits 0).
 
 ## [0.1.1] — 2026-10-07
 

@@ -287,14 +287,19 @@ def explain(observation_id: str, as_json: bool = typer.Option(False, "--json")) 
 
 
 @app.command()
-def site(out_dir: str | None = typer.Option(None, "--out", "-o")) -> None:
+def site(
+    out_dir: str | None = typer.Option(None, "--out", "-o"),
+    dataset_ref: str | None = typer.Option(
+        None, "--dataset-ref", envvar="PSD2_DATASET_REF"
+    ),
+) -> None:
     """Build the static website (HTML + JSON) into site/dist/."""
     _check_dataset()
     from pathlib import Path
 
     from psd2_kpi_es import sitegen
 
-    dest = sitegen.build(Path(out_dir) if out_dir else None)
+    dest = sitegen.build(Path(out_dir) if out_dir else None, dataset_ref)
     typer.echo(f"site written to {dest}")
 
 

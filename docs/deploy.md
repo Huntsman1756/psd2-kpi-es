@@ -54,6 +54,10 @@ Variables:
 |---|---|
 | `VPS_WEB_ROOT` | e.g. `/var/www/psd2-kpi-es` |
 | `VPS_SSH_PORT` | optional, defaults to 22 |
+| `SITE_URL` | e.g. `https://psd2.example.com` — post-deploy smoke test |
+
+The footer of every generated page shows the dataset release it was built
+from, so the deployed site is always traceable to a reviewed dataset.
 
 The workflow pins the host key (`StrictHostKeyChecking=yes`) rather than
 trusting whatever it finds on first connect. Get the right line from the
