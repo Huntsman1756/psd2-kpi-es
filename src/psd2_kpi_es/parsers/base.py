@@ -68,4 +68,9 @@ def parse_period_label(label: str) -> tuple[date, date, str]:
     if m:
         d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
         return d, d, "day"
+    # explicit range labels (e.g. '2019-09-14_2019-12-16', Renta 4's first
+    # publication spans the PSD2 go-live window rather than a calendar quarter)
+    m = re.fullmatch(r"(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})", label)
+    if m:
+        return date.fromisoformat(m.group(1)), date.fromisoformat(m.group(2)), "range"
     raise ValueError(f"unrecognized period label: {label!r}")

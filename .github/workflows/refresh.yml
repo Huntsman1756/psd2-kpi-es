@@ -24,10 +24,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Fetch + parse all entities
-        run: |
-          for e in renta4 unicaja caixabank santander; do
-            uv run psd2-kpi-es ingest "$e" || true
-          done
+        run: bash scripts/ingest_all.sh
 
       - name: Generate report
         run: uv run psd2-kpi-es report

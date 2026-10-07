@@ -28,7 +28,7 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Type check
-        run: uv run mypy src || true   # informational in v0.1
+        run: uv run mypy src
 
       - name: Tests (fixtures only, no network)
         run: uv run pytest

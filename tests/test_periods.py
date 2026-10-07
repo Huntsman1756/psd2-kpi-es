@@ -16,5 +16,10 @@ def test_parse_period_label():
     assert parse_period_label("2025-03") == (date(2025, 3, 1), date(2025, 3, 31), "month")
     assert parse_period_label("2025-12") == (date(2025, 12, 1), date(2025, 12, 31), "month")
     assert parse_period_label("2025-03-14") == (date(2025, 3, 14), date(2025, 3, 14), "day")
+    assert parse_period_label("2019-09-14_2019-12-16") == (
+        date(2019, 9, 14),
+        date(2019, 12, 16),
+        "range",
+    )
     with pytest.raises(ValueError):
         parse_period_label("Q3-2025")

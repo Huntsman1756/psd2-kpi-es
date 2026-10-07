@@ -9,6 +9,7 @@ import typer
 
 from psd2_kpi_es import pipeline, queries
 from psd2_kpi_es.catalog import load_catalog
+from psd2_kpi_es.errors import Psd2Error
 
 app = typer.Typer(
     name="psd2-kpi-es",
@@ -72,7 +73,17 @@ def parse(entity_id: str) -> None:
 def ingest(entity_id: str) -> None:
     """fetch + parse + validate + publish for an entity."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    res = pipeline.ingest_entity(entity_id)
+    try:
+        res = pipeline.ingest_entity(entity_id)
+    except Psd2Error as exc:
+        # Typed domain failures get a dedicated exit code so schedulers can
+        # distinguish e.g. SOURCE_NOT_FOUND from real breakage. stderr carries
+        # a machine-readable error object.
+        typer.echo(
+            json.dumps({"entity": entity_id, "error_code": exc.code, "error": str(exc)}),
+            err=True,
+        )
+        raise typer.Exit(5) from exc
     typer.echo(json.dumps(res, indent=2, default=str))
 
 
