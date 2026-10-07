@@ -1,17 +1,29 @@
 name: deploy-site
 
-# Rebuilds the static site from live sources and rsyncs it to the VPS.
-# Data freshness comes from the refresh workflow (monthly, day 5); this
-# runs after it and on demand. Requires secrets/vars documented in
-# docs/deploy.md; without them the deploy step fails fast on purpose.
+# Deploys ONLY reviewed dataset versions — this workflow never touches
+# live sources. refresh.yml ingests and produces artifacts for human
+# review; the accepted dataset is attached to a GitHub release
+# (observations.parquet, sources.parquet, SHA256SUMS). Here we download a
+# released dataset, verify its checksums, build the static site and rsync
+# it to the VPS. What the site shows = a reviewed dataset version.
+#
+# Secrets/vars documented in docs/deploy.md.
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 7 6 * *"   # monthly, day 6, 07:00 UTC
+    inputs:
+      dataset_ref:
+        description: Release tag providing the dataset (empty = latest release with dataset assets)
+        required: false
+        default: ""
+  release:
+    types: [published]
 
 permissions:
   contents: read
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build-deploy:
@@ -26,8 +38,38 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Fetch + parse all entities
-        run: bash scripts/ingest_all.sh
+      - name: Resolve dataset release
+        id: ds
+        env:
+          REF: ${{ inputs.dataset_ref || github.event.release.tag_name }}
+        run: |
+          has_assets() {
+            names="$(gh release view "$1" --json assets --jq '.assets[].name' 2>/dev/null)"
+            printf '%s\n' "$names" | grep -qx 'observations.parquet' \
+              && printf '%s\n' "$names" | grep -qx 'sources.parquet' \
+              && printf '%s\n' "$names" | grep -qx 'SHA256SUMS'
+          }
+          if [ -n "$REF" ] && ! has_assets "$REF"; then
+            echo "release $REF has no dataset assets — falling back"
+            REF=""
+          fi
+          if [ -z "$REF" ]; then
+            for tag in $(gh release list --limit 20 --json tagName --jq '.[].tagName'); do
+              if has_assets "$tag"; then REF="$tag"; break; fi
+            done
+          fi
+          test -n "$REF" || { echo "::error::no release with dataset assets found"; exit 1; }
+          echo "dataset release: $REF"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Download + verify released dataset
+        run: |
+          mkdir -p data/normalized
+          gh release download "${{ steps.ds.outputs.ref }}" \
+            -p 'observations.parquet' -p 'sources.parquet' -p 'SHA256SUMS' \
+            -D data/normalized --clobber
+          cd data/normalized
+          grep '\.parquet$' SHA256SUMS | sha256sum -c -
 
       - name: Build static site
         run: uv run psd2-kpi-es site
@@ -44,6 +86,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.VPS_DEPLOY_KEY }}
 
+      - name: Pin VPS host key
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        env:
+          VPS_HOST_KEY: ${{ secrets.VPS_HOST_KEY }}
+
       - name: Deploy site/dist to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -53,5 +103,5 @@ jobs:
         run: |
           test -n "$VPS_HOST" && test -n "$VPS_USER" && test -n "$WEB_ROOT"
           rsync -az --delete \
-            -e "ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT" \
+            -e "ssh -o StrictHostKeyChecking=yes -p $SSH_PORT" \
             site/dist/ "$VPS_USER@$VPS_HOST:$WEB_ROOT/"

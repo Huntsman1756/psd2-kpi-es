@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+- `deploy-site.yml` no longer ingests live sources: it deploys only
+  reviewed datasets — downloads `observations.parquet`/`sources.parquet`
+  from a GitHub release, verifies SHA-256 against `SHA256SUMS`, builds and
+  rsyncs. Trigger: `workflow_dispatch` (optional `dataset_ref`) or release
+  published.
+- VPS deploy hardened: SSH host key pinned via `VPS_HOST_KEY` secret
+  (`StrictHostKeyChecking=yes`, no trust-on-first-use); docs specify a
+  dedicated unprivileged `psd2-deploy` user.
+
 ## [0.1.1] — 2026-10-07
 
 Hardening + static web presence. No dataset schema changes.
